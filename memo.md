@@ -21,30 +21,17 @@ Then, link the billing account on Web console befor enabling services.
 $ gcloud services enable storage.googleapis.com
 ```
 
-3. Create a service account to manage Google Cloud Storage Bucket
-
-```bash
-$ gcloudgcloud iam service-accounts create tfstate-manager \
-  --description="manage the tfstate for Cloudflare DNS Records IaC" \
-  --display-name="tfstate manager"
-```
-
-Then, binding the pre-defined IAM Polocy to the new service account.
-
-```bash
-gcloud projects add-iam-policy-binding ojiverse \
-  --member="serviceAccount:tfstate-manager@ojiverse.iam.gserviceaccount.com" \
-  --role="roles/storage.admin"
-```
-
-`storage/admin` is too strong policy just to manage tfstatus on the bucket. So I MUST update the policy later.
-
-4. Create a new bucket via Terraform
+3. Create a new bucket via Terraform
 
 Please check [./storage.tf](./storage.tf)
 
-5. migrate the current status with Storage bucket
+NOTE: if you fail to apply the terraform code, you have to complete [the setup of ADC](https://cloud.google.com/docs/authentication/provide-credentials-adc?hl=ja). And ensure the account (or service account) has been grant the permission to manage Cloud Storage Bucket.
+
+4. migrate the current status with Storage bucket
 
 ```bash
 $ terraform init -migrate-state
 ```
+
+Now your tfstate is managed on Cloud Storage.
+
