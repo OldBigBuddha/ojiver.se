@@ -21,8 +21,8 @@ jobs:
 
       - uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: "projects/${{ secrets.PRODUCTION_GCP_NUMBER }}/locations/global/workloadIdentityPools/github-actions-oidc/providers/github-actions-oidc-provider"
-          service_account: 'github-actions@${{ secrets.PRODUCTION_GCP_ID }}.iam.gserviceaccount.com'
+          workload_identity_provider: "projects/${{ secrets.OJIVERSE_GOOGLECLOUD_PROJECT_ID }}/locations/global/workloadIdentityPools/github-actions-oidc/providers/github-actions-oidc-provider"
+          service_account: 'github-actions@${{ secrets.OJIVERSE_GOOGLECLOUD_PROJECT_ID }}.iam.gserviceaccount.com'
 
       - name: Test
         run: gcloud iam service-accounts list

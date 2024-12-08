@@ -78,3 +78,44 @@ resource "google_iam_workload_identity_pool_provider" "github_actions" {
 }
 ```
 After created, associate the service account and the workload pool.
+
+2. prepare workflow
+
+After all resources are created, create a new workflow within OIDC authentication like:
+
+```yaml
+name: OIDC Actions
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: "projects/${{ secrets.OJIVERSE_GOOGLECLOUD_PROJECT_ID }}/locations/global/workloadIdentityPools/github-actions-oidc/providers/github-actions-oidc-provider"
+          service_account: 'github-actions@${{ secrets.OJIVERSE_GOOGLECLOUD_PROJECT_ID }}.iam.gserviceaccount.com'
+
+      - name: Test
+        run: gcloud iam service-accounts list
+```
+
+Note that this workflow contains the [secrets](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions). Please don't forget to set them to the respository.
+
+```bash
+gh secret set OJIVERSE_GOOGLECLOUD_PROJECT_ID
+```
