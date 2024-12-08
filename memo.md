@@ -35,3 +35,46 @@ $ terraform init -migrate-state
 
 Now your tfstate is managed on Cloud Storage.
 
+## setup GitHub Action to apply terraform
+
+ref: https://zenn.dev/ring_belle/articles/gcp-oidc-githubactions
+
+1. create a new service account to manage the storage bucket for tfstate
+
+Add [sa.tf](./sa.tf)
+
+```terraform
+resource "google_service_account" "github_actions" {
+  project      = var.project_id
+  account_id   = "github-actions"
+  display_name = "Github Actions"
+}
+resource "google_project_iam_member" "github_actions" {
+  project = var.project_id
+  role    = "roles/owner"
+  member  = "serviceAccount:${google_service_account.github_actions.email}"
+}
+```
+
+After apply new changes, prepare Workload Identity Pool.
+
+file: [workload.tf](./workload.tf)
+
+```terraform
+resource "google_iam_workload_identity_pool_provider" "github_actions" {
+  project                            = var.project_id
+  workload_identity_pool_provider_id = "github-actions-oidc-provider"
+  workload_identity_pool_id          = google_iam_workload_identity_pool.github_actions.workload_identity_pool_id
+  attribute_condition                = "\"${var.github_org_name}/${var.github_org_name}\" == assertion.repository"
+
+  oidc {
+    issuer_uri = "https://token.actions.githubusercontent.com"
+  }
+
+  attribute_mapping = {
+    "google.subject"       = "assertion.sub"
+    "attribute.repository" = "assertion.repository"
+  }
+}
+```
+After created, associate the service account and the workload pool.
